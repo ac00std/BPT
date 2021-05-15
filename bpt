@@ -1,0 +1,117 @@
+<script>
+
+function bpt(){
+var sim = parseInt(document.getElementById("sim").value);
+var threshold = parseInt(document.getElementById("threshold").value);
+var mu = parseInt(document.getElementById("mu").value);
+var sd = parseInt(document.getElementById("sd").value);
+
+var xt=[];
+xt[0]=0;
+var tn=0;
+var ts=[];
+ts[0]=0;
+var pt=[];
+var mt=[];
+var cpt=[];
+cpt[0]=0;
+pt[0]=0;
+mt[0]=0;
+
+  
+	for(var i=1; i<sim; i++) {	
+		ts[i]=i;
+		if(xt[i-1]>threshold){
+		xt[i]=mu+sd*Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());}else{
+		xt[i]=xt[i-1]+mu+sd*Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+		}
+		if(xt[i]>threshold){
+		tn=tn+1;
+		cpt[tn]=i;
+		pt[tn]=cpt[tn]-cpt[tn-1];
+		mt[tn]=tn;
+		}
+	}
+
+pt.shift();
+var len=pt.length;
+var star=Math.round(1+Math.log2(len));
+var ss=(Math.max(...pt)-Math.min(...pt)+1)/star;
+
+var b=threshold/mu;
+var c=Math.pow(threshold/sd,2);
+var ex=[];
+var ey=[];
+
+for(var j=Math.min(...pt); j<Math.max(...pt)+1; j++) {
+	ex[j-Math.min(...pt)]=j;
+//ey[j-Math.min(...pt)]=0.5;	
+ey[j-Math.min(...pt)]=Math.sqrt(c/2/Math.PI)/Math.pow(j,1.5)*Math.exp(-c*Math.pow(j-b,2)/2/b/b/j)*ss;
+};
+
+var trace1 = {
+    x: ts,
+    y: xt,
+    mode: 'lines',
+    name: 'Xt',
+  };
+
+var trace2 = {
+    x: pt,
+    type: 'histogram',
+    name: 'Obeserved',
+    histnorm: 'probability',
+    xbins: {
+        size: ss, 
+    }
+  };
+
+var trace3 = {
+  x: ex,
+  y: ey,
+  mode: 'lines',
+  name: 'Expected',
+  line: {
+    dash: 'solid',
+    width: 3
+  }
+};
+
+var trace4 = {
+  x: [0,sim+1],
+  y: [threshold,threshold],
+  mode: 'lines',
+  name: 'Threshold',
+  line: {
+    dash: 'solid',
+    width: 3,
+    color: 'red',
+  }
+};
+
+var data = [trace1,trace4];
+
+    var layout = {
+        title: 'Time series of Xt',
+        xaxis: {
+            rangeslider: {}
+        },
+        yaxis: {
+            fixedrange: true
+        }
+    };
+
+    Plotly.newPlot('mymy', data, layout);
+
+    var layout2 = {
+  title: "Observed vs Expected", 
+  xaxis: {title: "Interval between earthquakes"}, 
+  yaxis: {title: "Frequency"}
+    };
+
+    var data2 = [trace2,trace3];
+    Plotly.newPlot('mymy2', data2, layout2);
+
+}
+
+</script>
